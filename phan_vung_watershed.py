@@ -6,7 +6,7 @@ import argparse
 import random as rng
 
 rng.seed(12345)
-image_path = r'Path to the image'
+image_path = r'F:\MMOTU_DS2Net-main\data\OTU-2D-Dataset-main\images\11.jpg'
 
 src = cv.imread(image_path)
 if src is None:
@@ -58,13 +58,18 @@ cv.imshow('Peaks', dist)
 dist_8u = dist.astype('uint8')
 # Find total markers
 contours, _ = cv.findContours(dist_8u, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+# Filter contours by area
+min_area = 26  # Set minimum area threshold
+large_contours = [c for c in contours if cv.contourArea(c) > min_area]
 
 # Create the marker image for the watershed algorithm
 markers = np.zeros(dist.shape, dtype=np.int32)
 
 # Draw the foreground markers
-for i in range(len(contours)):
-    cv.drawContours(markers, contours, i, (i+1), -1)
+# for i in range(len(contours)):
+#     cv.drawContours(markers, contours, i, (i+1), -1)
+for i in range(len(large_contours)):
+    cv.drawContours(markers, large_contours, i, (i + 1), -1)
 
 # Draw the background marker
 cv.circle(markers, (5,5), 3, (255,255,255), -1)
@@ -93,8 +98,8 @@ dst = np.zeros((markers.shape[0], markers.shape[1], 3), dtype=np.uint8)
 for i in range(markers.shape[0]):
     for j in range(markers.shape[1]):
         index = markers[i,j]
-        if index > 0 and index <= len(contours):
-            dst[i,j,:] = colors[index-2]
+        if index > 0 and index <= len(large_contours):
+            dst[i,j,:] = colors[index-1]
 
 # Visualize the final image
 cv.imshow('Final Result', dst)
